@@ -85,3 +85,24 @@ def initialize_session_state() :
         return_source_documents=False,
         combine_docs_chain_kwargs=chain_type_kwargs,
     )
+
+def on_click_callback():
+
+    load_css()
+    customer_prompt = st.session_state.customer_prompt
+
+    if customer_prompt:
+        st.session_state.input_value = ""
+        st.session_state.initial_message_sent = True
+
+        with st.spinner('Generating response...'):
+
+            llm_response = st.session_state.chain(
+                {"context": st.session_state.chain.memory.buffer, "question": customer_prompt}, return_only_outputs=True)
+
+    st.session_state.history.append(
+        Message("customer", customer_prompt)
+    )
+    st.session_state.history.append(
+        Message("AI", llm_response)
+    )
