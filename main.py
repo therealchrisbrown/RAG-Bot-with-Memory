@@ -40,7 +40,7 @@ def load_db():
         url=QDRANT_HOST,
         api_key=QDRANT_API_KEY,
     )
-    embeddings = CohereEmbeddings(model="embed-english-v2.0")
+    embeddings = CohereEmbeddings(model="embed-english-v3.0")
     vector_store = Qdrant(
         client = client,
         collection_name = "hotelDataCollection",
@@ -76,15 +76,26 @@ def initialize_session_state() :
         chain_type_kwargs = { "prompt" : PROMPT }
         llm = Cohere(model = "command", temperature=0.5)
 
+        template = (
+                """Combine the chat history and follow up question into 
+                a standalone question. 
+                If chat hsitory is empty, use the follow up question as it is.
+                Chat History: {chat_history}
+                Follow up question: {question}"""
+            )
+                # question_generator_chain = LLMChain(llm=llm, prompt=prompt)
+            
+        prompt = PromptTemplate.from_template(template)
+        print("vector store loaded !")
     # build your rag chain
-    st.session_state.chain = ConversationalRetrievalChain.from_llm(
-        llm=llm, 
-        chain_type="stuff",
-        memory = ConversationSummaryMemory(llm = llm, memory_key='chat_history', input_key='question', output_key= 'answer', return_messages=True),
-        retriever = vector_store.as_retriever(),
-        return_source_documents=False,
-        combine_docs_chain_kwargs=chain_type_kwargs,
-    )
+        st.session_state.chain = ConversationalRetrievalChain.from_llm(
+            llm=llm, 
+            chain_type="stuff",
+            memory = ConversationSummaryMemory(llm = llm, memory_key='chat_history', input_key='question', output_key= 'answer', return_messages=True),
+            retriever = vector_store.as_retriever(),
+            return_source_documents=False,
+            combine_docs_chain_kwargs=chain_type_kwargs,
+        )
 
 def on_click_callback():
 
@@ -122,7 +133,7 @@ def main():
             div = f"""
             <div class = "chatRow 
             {'' if chat.origin == 'AI' else 'rowReverse'}">
-                <img class="chatIcon" src = "app/static/{'elsa.png' if chat.origin == 'AI' else 'admin.png'}" width=32 height=32>
+                <img class="chatIcon" src = "./app/static/{'elsa.png' if chat.origin == 'AI' else 'admin.png'}" width=32 height=32>
                 <div class = "chatBubble {'adminBubble' if chat.origin == 'AI' else 'humanBubble'}">&#8203; {msg}</div>
             </div>"""
             st.markdown(div, unsafe_allow_html=True)
