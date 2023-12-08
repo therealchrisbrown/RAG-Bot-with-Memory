@@ -28,6 +28,12 @@ class Message :
     origin : Literal["Customer","elsa"]
     Message : "str"
 
+def load_css():
+    with open("static/styles.css", "r")  as f:
+        css = f"<style>{f.read()} </style>"
+        # st.write(css)
+        st.markdown(css, unsafe_allow_html = True)
+
 #Load QDRANT client
 def load_db():
     client = qdrant_client.QdrantClient(
