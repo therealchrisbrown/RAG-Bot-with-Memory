@@ -7,9 +7,10 @@ import qdrant_client
 from langchain.embeddings.cohere import CohereEmbeddings
 from langchain.vectorstores import Qdrant
 
+from langchain.chains import ConversationalRetrievalChain,LLMChain, RetrievalQA
+from langchain.embeddings.cohere import CohereEmbeddings
 from langchain.llms import Cohere
 from langchain.prompts import PromptTemplate
-from langchain.chains import ConversationalRetrievalChain,LLMChain, RetrievalQA
 from langchain.chains.conversation.memory import ConversationSummaryMemory
 
 os.environ["COHERE_API_KEY"] = st.secrets["COHERE_API_KEY"]
@@ -43,7 +44,7 @@ def load_db():
     embeddings = CohereEmbeddings(model="embed-english-v3.0")
     vector_store = Qdrant(
         client = client,
-        collection_name = "hotelDataCollection",
+        collection_name = "chat-rag-memory",
         embeddings = embeddings
     )
     print("connection established !")
@@ -52,10 +53,17 @@ def load_db():
 def initialize_session_state() :
     vector_store = load_db()
 
+    if "initial_message_sent" not in st.session_state:
+        st.session_state.initial_message_sent = False
+
+    if "input_value" not in st.session_state:
+        st.session_state.input_value = ""
+
     if "history" not in st.session_state:
         st.session_state.history = []
     
-    if "chain" not in st.session_state : 
+    if "chain" not in st.session_state :
+
         prompt_template = """
         You are a Hotel Receptionist at "Four Points by Sheraton" hotel.
 
@@ -74,7 +82,7 @@ def initialize_session_state() :
         )
 
         chain_type_kwargs = { "prompt" : PROMPT }
-        llm = Cohere(model = "command", temperature=0.5)
+        llm = Cohere(model = "command", temperature=0.1)
 
         template = (
                 """Combine the chat history and follow up question into 
@@ -87,12 +95,13 @@ def initialize_session_state() :
             
         prompt = PromptTemplate.from_template(template)
         print("vector store loaded !")
-    # build your rag chain
-        st.session_state.chain = ConversationalRetrievalChain.from_llm(
-            llm=llm, 
-            chain_type="stuff",
+        # build your rag chain
+        st.session_state.chain = ConversationalRetrievalChain.from_llm(     
+            llm = llm,
+            chain_type = "stuff",
             memory = ConversationSummaryMemory(llm = llm, memory_key='chat_history', input_key='question', output_key= 'answer', return_messages=True),
-            retriever = vector_store.as_retriever(),
+            retriever = vector_store.as_retriever(search_type="mmr"),
+            condense_question_prompt = prompt,
             return_source_documents=False,
             combine_docs_chain_kwargs=chain_type_kwargs,
         )
@@ -103,6 +112,7 @@ def on_click_callback():
     customer_prompt = st.session_state.customer_prompt
 
     if customer_prompt:
+
         st.session_state.input_value = ""
         st.session_state.initial_message_sent = True
 
@@ -158,12 +168,13 @@ def main():
 
         cols[1].form_submit_button(
             "Ask",
-            type="secondary",
+            type="primary",
             on_click=on_click_callback,
         )
 
     # Update the session state variable when the input field changes
-    st.session_state.input_value = cols[0].text_input
+    #st.session_state.input_value = cols[0].text_input("Input", key="customer_input")
+
 
 if __name__ == "__main__":
     main()

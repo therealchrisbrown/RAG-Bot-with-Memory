@@ -18,7 +18,7 @@ client = qdrant_client.QdrantClient(
 #create collection
 collection_name = "chat-rag-memory"
 vector_config = qdrant_client.http.models.VectorParams(
-    size = 4096,
+    size = 1024,
     distance = qdrant_client.http.models.Distance.COSINE
 )
 client.recreate_collection(
