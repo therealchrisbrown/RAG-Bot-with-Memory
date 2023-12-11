@@ -44,3 +44,7 @@ streamlit run main.py
 ## Configuration
 
 Make sure to configure your Cohere API key, Qdrant host, and Qdrant API key in the environment variables as mentioned in the Setup section.
+
+## Credits
+
+Blog: https://aniz.hashnode.dev/chatbot-with-rag-memory-cohere-ai-streamlit-langchain-qdrant
