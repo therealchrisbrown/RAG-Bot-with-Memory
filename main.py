@@ -87,7 +87,7 @@ def initialize_session_state() :
         template = (
                 """Combine the chat history and follow up question into 
                 a standalone question. 
-                If chat hsitory is empty, use the follow up question as it is.
+                If chat history is empty, use the follow up question as it is.
                 Chat History: {chat_history}
                 Follow up question: {question}"""
             )
