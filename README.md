@@ -48,3 +48,6 @@ Make sure to configure your Cohere API key, Qdrant host, and Qdrant API key in t
 ## Credits
 
 Blog: https://aniz.hashnode.dev/chatbot-with-rag-memory-cohere-ai-streamlit-langchain-qdrant
+
+## To Do
+Deploy Application with RAG Pipeline (so that you implement your own data).
